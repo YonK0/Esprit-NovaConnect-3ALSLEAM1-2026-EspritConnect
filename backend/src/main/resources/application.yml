@@ -1,0 +1,158 @@
+spring:
+  application:
+    name: espritconnect
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/espritconnect}
+    username: ${DB_USER:espritconnect}
+    password: ${DB_PASSWORD:change_me_in_prod}
+  # Gmail SMTP via App Password. Leave MAIL_USERNAME empty to disable
+  # real sending — MailService falls back to console logging in that case.
+  # App passwords: https://myaccount.google.com/apppasswords
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          # 587 → STARTTLS (defaults). 465 → set MAIL_SSL=true and
+          # MAIL_STARTTLS=false. Lets you switch transports when a network
+          # blocks one port, without code changes.
+          starttls:
+            enable: ${MAIL_STARTTLS:true}
+            required: ${MAIL_STARTTLS:true}
+          ssl:
+            enable: ${MAIL_SSL:false}
+            trust: ${MAIL_HOST:smtp.gmail.com}
+            checkserveridentity: true
+          connectiontimeout: 15000
+          timeout: 15000
+          writetimeout: 15000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+        format_sql: false
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    out-of-order: true
+    # Don't abort startup when an already-applied migration's file checksum
+    # changes (e.g. editing/reformatting a seed file like V106). New migrations
+    # still run; changed ones are simply not re-validated. NOTE: editing an
+    # applied migration does NOT re-run it — to actually apply seed-data edits
+    # you still need a reseed (docker compose down -v && up --build).
+    validate-on-migrate: false
+    locations: classpath:db/migration
+  servlet:
+    multipart:
+      # Allow larger resource uploads (e.g. PFE PDFs). Matches nginx client_max_body_size.
+      max-file-size: 25MB
+      max-request-size: 25MB
+
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+  api-docs:
+    path: /v3/api-docs
+
+app:
+  base-url: ${APP_BASE_URL:http://localhost:4200}
+  mail:
+    # The 'From' header recipients see. For Gmail this MUST be your username
+    # (or an alias on the same account) or Google will rewrite/strip it.
+    from: ${MAIL_FROM:no-reply@espritconnect.local}
+    from-name: ${MAIL_FROM_NAME:EspritConnect}
+  security:
+    jwt:
+      secret: ${JWT_SECRET:dev_secret_change_in_prod_minimum_64_chars_long_for_hs256_aaaaaaaa}
+      access-token-ttl-minutes: 15
+      refresh-token-ttl-days: 7
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
+  ollama:
+    base-url: ${OLLAMA_URL:http://host.docker.internal:11434}
+    model: ${OLLAMA_MODEL:llama3.2:3b}
+    # Cold-start inference on a CPU-only Ollama host can easily take 60-90s
+    # the first time a model is loaded. Subsequent calls are <5s once the
+    # weights are cached. Set higher than the slowest realistic cold-start.
+    timeout-seconds: ${OLLAMA_TIMEOUT_SECONDS:180}
+    enabled: ${OLLAMA_ENABLED:true}
+  storage:
+    endpoint: ${STORAGE_ENDPOINT:http://minio:9000}
+    # Public-facing endpoint used to rewrite presigned URLs so the browser
+    # can resolve them. In docker-compose dev this is the localhost mapping.
+    public-endpoint: ${STORAGE_PUBLIC_ENDPOINT:http://localhost:9000}
+    access-key: ${STORAGE_ACCESS_KEY:minioadmin}
+    secret-key: ${STORAGE_SECRET_KEY:minioadmin}
+    secure: ${STORAGE_SECURE:false}
+    region: ${STORAGE_REGION:us-east-1}
+    presigned-url-expiry-seconds: 600
+    buckets:
+      verification: ${STORAGE_BUCKET_VERIFICATION:verification}
+
+verification:
+  enabled: ${VERIFICATION_ENABLED:true}
+  recruiter:
+    blocked-email-domains:
+      - gmail.com
+      - googlemail.com
+      - yahoo.com
+      - yahoo.fr
+      - yahoo.co.uk
+      - outlook.com
+      - hotmail.com
+      - hotmail.fr
+      - live.com
+      - icloud.com
+      - me.com
+      - protonmail.com
+      - proton.me
+      - aol.com
+      - yandex.com
+      - yandex.ru
+      - gmx.com
+      - gmx.de
+      - mail.com
+      - zoho.com
+      - tutanota.com
+      - fastmail.com
+  student:
+    auto-approve-domains:
+      - esprit.tn
+  files:
+    max-size-bytes: 5242880
+    allowed-mime-types:
+      - image/jpeg
+      - image/png
+      - image/webp
+      - application/pdf
+  face:
+    max-retries: 3
+  python:
+    base-url: ${VERIFICATION_SVC_URL:http://verification-service:8000}
+    shared-secret: ${VERIFICATION_SHARED_SECRET:dev_secret_change_me}
+    timeout-seconds: 60

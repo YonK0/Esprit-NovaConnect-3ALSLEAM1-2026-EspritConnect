@@ -1,0 +1,220 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* jsvectormap stylesheet — required for tooltip positioning and the
+   default map controls. Loaded once globally; the dashboard component
+   instantiates Map instances against world-merc by default. */
+@import 'jsvectormap/dist/jsvectormap.css';
+
+:root {
+  --color-primary: #E30613;
+  --color-primary-dark: #7A0009;
+  --color-glow: #FF2D3D;
+  --color-black: #1A1A1A;
+  --color-gray-100: #F5F5F7;
+  --color-gray-300: #D1D1D6;
+  --color-gray-600: #6E6E73;
+
+  /* Tailwind color tokens as RGB channel triplets (consumed via
+     rgb(var(--c-x) / <alpha-value>) in tailwind.config.js). These defaults
+     reproduce the original palette, so the whole app looks identical until
+     a theme override remaps them. */
+  --c-primary: 227 6 19;
+  --c-primary-dark: 122 0 9;
+  --c-glow: 255 45 61;
+  --c-ink-900: 11 11 13;
+  --c-ink-800: 26 26 26;
+  --c-ink-700: 55 58 64;
+  --c-ink-500: 110 110 115;
+  --c-ink-400: 156 158 163;
+  --c-ink-300: 209 209 214;
+  --c-ink-200: 229 230 234;
+  --c-ink-100: 245 245 247;
+  --c-dark-bg: 10 10 12;
+
+  /* Semantic status colors (consumed via Tailwind: text-danger, bg-success, …) */
+  --c-success: 4 120 87;
+  --c-warning: 180 83 9;
+  --c-danger: 190 18 60;
+  --c-info: 2 132 199;
+  --c-verified: 29 155 240;   /* blue verified tick */
+  --c-otw: 4 120 87;          /* open-to-work green ring */
+
+  /* ── Radii / elevation / motion tokens (single source of truth) ── */
+  --r-sm: .375rem; --r-md: .5rem; --r-lg: .75rem; --r-xl: 1rem; --r-2xl: 1.25rem; --r-full: 9999px;
+  --shadow-sm: 0 1px 2px rgb(11 11 13 / .06);
+  --shadow-md: 0 6px 16px rgb(11 11 13 / .08);
+  --shadow-lg: 0 14px 36px rgb(11 11 13 / .12);
+  --dur-fast: 150ms; --dur: 200ms; --dur-slow: 300ms;
+  --ease: cubic-bezier(.2, 0, 0, 1);
+}
+
+/* ── Admin panel themes ─────────────────────────────────────────────────────
+   The back-office layout sets [data-admin-theme] on its root; these blocks
+   remap the ink scale within that subtree only, so the front office (which
+   has no data-admin-theme) keeps the default palette. "dark" needs no block —
+   it is the default above. */
+[data-admin-theme='light'] {
+  --c-dark-bg: 243 244 246;   /* page background — light grey */
+  --c-ink-900: 255 255 255;   /* panels — white */
+  --c-ink-800: 241 243 245;
+  --c-ink-500: 107 114 128;   /* muted text */
+  --c-ink-300: 71 85 105;     /* secondary text — dark enough on white */
+  --c-ink-100: 17 24 39;      /* primary text — near-black */
+}
+
+[data-admin-theme='slate'] {
+  --c-dark-bg: 15 23 42;      /* slate-900 */
+  --c-ink-900: 30 41 59;      /* slate-800 panels */
+  --c-ink-800: 51 65 85;
+  --c-ink-500: 148 163 184;   /* slate-400 */
+  --c-ink-300: 203 213 225;   /* slate-300 text */
+  --c-ink-100: 241 245 249;   /* slate-100 text */
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  background: var(--color-gray-100);
+  color: var(--color-black);
+}
+
+.dark {
+  background: rgb(var(--c-dark-bg));
+  color: rgb(var(--c-ink-100));
+}
+
+.glass {
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* ── Button system ──────────────────────────────────────────────────────────
+   Base + variants + sizes. Existing markup using .btn-primary / .btn-secondary
+   keeps working and now gains focus-visible, disabled, active and consistent
+   transitions for free. New variants: ghost, destructive, link. Sizes: sm/lg. */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 font-semibold rounded-lg
+         px-5 py-2.5 leading-none select-none
+         transition-[background-color,color,box-shadow,transform,border-color]
+         duration-200 ease-standard
+         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
+         focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+}
+.btn-primary {
+  @apply btn text-white shadow-sm bg-gradient-to-b from-glow to-primary
+         hover:from-primary hover:to-primary-dark hover:shadow-md hover:-translate-y-px
+         active:translate-y-0 active:shadow-sm;
+}
+.btn-secondary {
+  @apply btn bg-white text-ink-800 border border-ink-300 shadow-sm
+         hover:bg-ink-100 hover:border-ink-400 hover:-translate-y-px
+         active:translate-y-0 active:shadow-sm;
+}
+.btn-ghost {
+  @apply btn bg-transparent text-ink-800 hover:bg-ink-100 active:translate-y-px;
+}
+.btn-destructive {
+  @apply btn text-white shadow-sm bg-danger hover:brightness-110 hover:shadow-md
+         hover:-translate-y-px active:translate-y-0 active:shadow-sm;
+}
+.btn-link        { @apply inline-flex items-center gap-1 font-semibold text-primary rounded
+                          hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary; }
+.btn-sm   { @apply px-3 py-1.5 text-sm gap-1.5; }
+.btn-lg   { @apply px-6 py-3 text-base; }
+.btn-icon { @apply p-2; }
+
+.field, .input {
+  @apply w-full px-4 py-3 border border-ink-300 rounded-lg bg-white text-ink-800
+         placeholder:text-ink-400 transition-[border-color,box-shadow] duration-150 ease-standard
+         focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary;
+}
+.input-error   { @apply border-danger focus:ring-danger focus:border-danger; }
+.input-success { @apply border-success focus:ring-success focus:border-success; }
+.hint       { @apply text-xs text-ink-500 mt-1; }
+.error-text { @apply text-xs text-danger mt-1; }
+
+.label {
+  @apply block text-xs font-mono uppercase tracking-wide text-ink-500 mb-1;
+}
+
+.card {
+  @apply bg-white rounded-xl shadow-sm border border-ink-300/40 p-6;
+}
+/* Add to any clickable card for consistent hover elevation. */
+.card-hover {
+  @apply transition-[box-shadow,transform] duration-200 ease-standard
+         hover:shadow-md hover:-translate-y-0.5;
+}
+
+/* Loading skeleton block — pair with explicit width/height utilities. */
+.skeleton { @apply bg-ink-200 rounded-md animate-pulse; }
+
+/* Chip — small inline tag used for skills, types, badges */
+.chip {
+  @apply inline-flex items-center text-xs font-mono px-2 py-0.5 rounded
+         bg-ink-100 text-ink-800;
+}
+.chip-red    { @apply chip bg-red-50 text-primary; }
+.chip-green  { @apply chip bg-green-50 text-green-700; }
+.chip-yellow { @apply chip bg-yellow-50 text-yellow-800; }
+
+/* Brand gradients used for hero cards (events, mentorship match card, profile banner) */
+.bg-brand-red {
+  background:
+    radial-gradient(circle at 80% 30%, #FF2D3D 0%, transparent 55%),
+    linear-gradient(135deg, #7A0009 0%, #1A0003 100%);
+}
+
+/* Categorical gradients for event / group covers — 6-color palette */
+.bg-card-1 { background: linear-gradient(135deg, #0E3B45 0%, #061a1f 100%); }
+.bg-card-2 { background: linear-gradient(135deg, #46243A 0%, #1a0d15 100%); }
+.bg-card-3 { background: linear-gradient(135deg, #4A2A1A 0%, #1a0c05 100%); }
+.bg-card-4 { background: linear-gradient(135deg, #16442A 0%, #06180f 100%); }
+.bg-card-5 { background: linear-gradient(135deg, #2A2E5B 0%, #0e0f24 100%); }
+.bg-card-6 { background: linear-gradient(135deg, #3D4514 0%, #1a1d04 100%); }
+
+/* Avatar stack — used on event RSVP counts */
+.avatar-stack > * + * { margin-left: -8px; }
+.avatar-dot {
+  @apply w-7 h-7 rounded-full ring-2 ring-white flex items-center
+         justify-center font-mono text-[10px] text-white;
+}
+
+/* ── Print / "Export PDF" support ──────────────────────────────────────────
+   The admin dashboard "Export PDF" button toggles `printing-dashboard` on
+   <body> and calls window.print(). These rules hide the admin chrome and
+   non-essential controls, and force background/colors to render so the dark
+   dashboard saves to PDF looking like the on-screen UI. */
+@media print {
+  @page { margin: 12mm; }
+
+  /* Anything tagged .no-print is hidden in the printout (e.g. Refresh /
+     Export buttons). */
+  .no-print { display: none !important; }
+
+  body.printing-dashboard ec-back-layout header,
+  body.printing-dashboard ec-back-layout aside,
+  body.printing-dashboard ec-toast-host {
+    display: none !important;
+  }
+
+  /* Remove the sidebar offset + page padding so the dashboard fills the page. */
+  body.printing-dashboard ec-back-layout .admin-content {
+    padding-left: 0 !important;
+  }
+  body.printing-dashboard ec-back-layout main {
+    padding: 0 !important;
+  }
+
+  /* Force backgrounds + colors to print (otherwise the dark theme drops to
+     white and the light-grey text becomes invisible). */
+  body.printing-dashboard,
+  body.printing-dashboard * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

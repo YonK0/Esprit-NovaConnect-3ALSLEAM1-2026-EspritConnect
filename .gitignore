@@ -1,0 +1,44 @@
+# ── Secrets / environment ──────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Node / Angular (frontend) ──────────────────────────────────────────
+node_modules/
+**/node_modules/
+frontend/dist/
+frontend/.angular/
+**/.angular/cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Java / Maven (backend) ─────────────────────────────────────────────
+target/
+**/target/
+*.class
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# ── Python (verification-service) ──────────────────────────────────────
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# ── Build output / logs / tmp ──────────────────────────────────────────
+dist/
+build/
+*.log
+*.tmp
+coverage/
+
+# ── IDE / editor ───────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+
+# ── OS ─────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

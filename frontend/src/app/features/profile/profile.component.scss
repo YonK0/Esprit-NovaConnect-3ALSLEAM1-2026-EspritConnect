@@ -1,0 +1,32 @@
+// Click-to-change avatar wrapper. The photo + open-to-work green ring & banner
+// are rendered by the shared <ec-avatar>, so the self view is identical to how
+// everyone else sees this profile. This only adds the hover "Change" overlay.
+.profile-avatar-wrap {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.profile-avatar-hover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 128px;
+  height: 128px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 0.5);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.profile-avatar-wrap:hover .profile-avatar-hover {
+  opacity: 1;
+}

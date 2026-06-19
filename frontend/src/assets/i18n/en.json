@@ -1,0 +1,15 @@
+{
+  "nav": {
+    "feed": "Feed",
+    "directory": "Directory",
+    "mentorship": "Mentorship",
+    "jobs": "Jobs",
+    "events": "Events",
+    "groups": "Groups"
+  },
+  "auth": {
+    "login": "Log in",
+    "signup": "Join the network",
+    "logout": "Logout"
+  }
+}

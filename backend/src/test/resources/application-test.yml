@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;INIT=CREATE DOMAIN IF NOT EXISTS jsonb AS VARCHAR\;CREATE DOMAIN IF NOT EXISTS "jsonb" AS VARCHAR\;CREATE DOMAIN IF NOT EXISTS "text" AS VARCHAR\;CREATE DOMAIN IF NOT EXISTS "uuid" AS UUID
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate:
+        globally_quoted_identifiers: true
+  flyway:
+    enabled: false
+
+app:
+  security:
+    jwt:
+      secret: test_secret_test_secret_test_secret_test_secret_test_secret_test_secret_aaaaaaaaa
+      access-token-ttl-minutes: 15
+      refresh-token-ttl-days: 7
+    cors:
+      allowed-origins: http://localhost:4200

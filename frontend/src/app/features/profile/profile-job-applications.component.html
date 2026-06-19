@@ -1,0 +1,150 @@
+<div class="profile-section">
+  <div class="section-header" (click)="toggleExpand()">
+    <div class="section-title">
+      <h3>📋 Job Applications</h3>
+      <span class="badge" *ngIf="activeCount > 0">{{ activeCount }}</span>
+    </div>
+    <button class="expand-btn" [class.expanded]="isExpanded">
+      <span>{{ isExpanded ? '▼' : '▶' }}</span>
+    </button>
+  </div>
+
+  <div class="section-content" *ngIf="isExpanded">
+    <div class="empty-state" *ngIf="applications.length === 0 && !loading">
+      <p>No job applications yet. Start applying to positions!</p>
+      <a href="/jobs" class="btn btn-primary btn-sm">Browse Jobs</a>
+    </div>
+
+    <div class="loading" *ngIf="loading">
+      <p>Loading applications...</p>
+    </div>
+
+    <div class="applications-list" *ngIf="applications.length > 0 && !loading">
+      <div class="filter-bar">
+        <label>Filter by status:</label>
+        <select
+          [(ngModel)]="selectedStatus"
+          (change)="onStatusChange()"
+          class="filter-select"
+        >
+          <option value="ALL">All Applications</option>
+          <option value="NEW">New</option>
+          <option value="REVIEWING">Under Review</option>
+          <option value="INTERVIEW">Interview</option>
+          <option value="OFFER">Offer</option>
+          <option value="HIRED">Hired</option>
+          <option value="REJECTED">Not Selected</option>
+        </select>
+        <span class="count">{{ filteredApplications.length }} results</span>
+      </div>
+
+      <div
+        class="application-card"
+        *ngFor="let app of filteredApplications"
+      >
+        <div class="card-header">
+          <div class="job-info">
+            <h4 class="job-title">{{ app.jobTitle }}</h4>
+            <p class="company-name">{{ app.companyName }}</p>
+          </div>
+          <span
+            class="status-badge"
+            [ngClass]="getStatusStyle(app.status)"
+          >
+            {{ getStatusLabel(app.status) }}
+          </span>
+        </div>
+
+        <div class="card-body">
+          <div class="app-details">
+            <div class="detail-row">
+              <span class="label">Applied:</span>
+              <span class="value">{{ app.createdAt | date: 'short' }}</span>
+            </div>
+            <div class="detail-row" *ngIf="app.coverLetter">
+              <span class="label">Cover Letter:</span>
+              <p class="value cover-letter">{{ app.coverLetter }}</p>
+            </div>
+            <div class="detail-row" *ngIf="app.cvUrl">
+              <span class="label">CV:</span>
+              <a [href]="app.cvUrl" target="_blank" class="link">
+                Download CV
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <button
+            class="btn btn-secondary btn-sm"
+            (click)="openApplication(app.jobOfferId)"
+          >
+            View Job
+          </button>
+          <button
+            *ngIf="isWithdrawable(app.status)"
+            class="btn btn-danger btn-sm"
+            (click)="withdrawApplication(app)"
+          >
+            Withdraw
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Job Description Modal -->
+<div class="modal-overlay" *ngIf="showJobModal" (click)="closeJobModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ selectedJob?.title }}</h2>
+      <button class="close-btn" (click)="closeJobModal()">✕</button>
+    </div>
+
+    <div class="modal-body loading" *ngIf="loadingJob">
+      <p>Loading job details...</p>
+    </div>
+
+    <div class="modal-body" *ngIf="!loadingJob && selectedJob">
+      <div class="job-detail-row" *ngIf="selectedJob.companyName">
+        <span class="label">Company:</span>
+        <p class="value">{{ selectedJob.companyName }}</p>
+      </div>
+
+      <div class="job-detail-row" *ngIf="selectedJob.type">
+        <span class="label">Type:</span>
+        <p class="value">{{ selectedJob.type }}</p>
+      </div>
+
+      <div class="job-detail-row" *ngIf="selectedJob.location">
+        <span class="label">Location:</span>
+        <p class="value">{{ selectedJob.location }} <span *ngIf="selectedJob.remote">(Remote)</span></p>
+      </div>
+
+      <div class="job-detail-row" *ngIf="selectedJob.remote && !selectedJob.location">
+        <span class="label">Work Mode:</span>
+        <p class="value">Remote</p>
+      </div>
+
+      <div class="job-detail-row" *ngIf="selectedJob.createdAt">
+        <span class="label">Posted:</span>
+        <p class="value">{{ selectedJob.createdAt | date: 'mediumDate' }}</p>
+      </div>
+
+      <div class="job-description-section" *ngIf="selectedJob.description">
+        <span class="label">Description:</span>
+        <p class="job-description">{{ selectedJob.description }}</p>
+      </div>
+    </div>
+
+    <div class="modal-body error" *ngIf="!loadingJob && !selectedJob" style="text-align: center; color: #ef4444;">
+      <p>Unable to load job details. Please try again later.</p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeJobModal()">Close</button>
+    </div>
+  </div>
+</div>
+

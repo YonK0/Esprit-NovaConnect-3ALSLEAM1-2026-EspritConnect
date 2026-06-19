@@ -1,0 +1,206 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: espritconnect-db
+    environment:
+      POSTGRES_DB: espritconnect
+      POSTGRES_USER: espritconnect
+      POSTGRES_PASSWORD: change_me_in_prod
+    ports:
+      - "5432:5432"
+    volumes:
+      # Default: portable named volume. For encryption-at-rest, set PGDATA_DIR
+      # in .env to a directory on a LUKS-encrypted mount (see
+      # docs/DATABASE_ENCRYPTION.md), e.g. PGDATA_DIR=/mnt/pgdata-enc — then the
+      # database files live on the encrypted device with no app/code changes.
+      - ${PGDATA_DIR:-pgdata}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U espritconnect"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    container_name: espritconnect-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      # Master key for server-side encryption (SSE-S3) of stored objects
+      # (verification ID docs + face images). Generate one:
+      #   echo "espritconnect-key:$(openssl rand -base64 32)"
+      # and put it in .env as MINIO_KMS_SECRET_KEY=...  When set, the backend
+      # turns on default SSE-S3 for the verification bucket. Empty = disabled.
+      MINIO_KMS_SECRET_KEY: ${MINIO_KMS_SECRET_KEY:-}
+    ports:
+      - "9000:9000"      # S3 API
+      - "9001:9001"      # Web console (visit http://localhost:9001 in dev)
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: espritconnect-api
+    ports:
+      # Host port 8081 → container 8080. Avoids the clash with Oracle's
+      # TNS Listener which holds host 8080 on Windows boxes by default.
+      # The frontend reaches the backend via the internal Docker network
+      # (nginx → backend:8080), so this only affects direct host access
+      # (Swagger UI, curl from PowerShell, ng serve dev mode).
+      - "8081:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      verification-service:
+        condition: service_started
+      ollama:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_URL: jdbc:postgresql://postgres:5432/espritconnect
+      DB_USER: espritconnect
+      DB_PASSWORD: change_me_in_prod
+      JWT_SECRET: dev_secret_change_in_prod_minimum_64_chars_long_for_hs256_aaaaaaaa
+      # Default "*" so the app works behind any URL (tunnel / LAN / QR / domain).
+      # Safe because auth is a Bearer token, not a cookie. Set explicit origins
+      # in .env for a hardened prod, e.g. CORS_ALLOWED_ORIGINS=https://app.example.com
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
+      # Ollama runs as a Compose service (see `ollama` below), reachable on the
+      # internal Docker network — no per-developer host install/config needed,
+      # so it works for anyone who clones the repo. OLLAMA_MODEL is shared with
+      # the ollama-pull service so the same model is pulled and used.
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:0.5b}
+      OLLAMA_ENABLED: "true"
+      # MinIO (S3-compatible object storage for verification uploads)
+      STORAGE_ENDPOINT: http://minio:9000
+      # Public host the browser can reach. Used to rewrite presigned URLs
+      # so avatar / CV / post-image downloads work from the user's machine.
+      STORAGE_PUBLIC_ENDPOINT: ${STORAGE_PUBLIC_ENDPOINT:-http://localhost:9000}
+      STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      STORAGE_BUCKET_VERIFICATION: verification
+      # Python verification microservice (OCR + face match)
+      VERIFICATION_SVC_URL: http://verification-service:8000
+      VERIFICATION_SHARED_SECRET: ${VERIFICATION_SHARED_SECRET:-dev_secret_change_me}
+      # SMTP for transactional emails. Defaults to Gmail SMTP. Requires a
+      # Gmail account with 2-Step Verification enabled + a 16-char App
+      # Password generated at https://myaccount.google.com/apppasswords.
+      # MAIL_USERNAME and MAIL_FROM should be the SAME Gmail address — Gmail
+      # rewrites the From header to the authenticated user. Leave
+      # MAIL_USERNAME empty to disable real sending — MailService falls back
+      # to logging links to this container's console. See .env.example.
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-EspritConnect}
+      # Transport toggles: 587 uses STARTTLS (defaults). For 465 set
+      # MAIL_SSL=true and MAIL_STARTTLS=false. For a relay on 2525 keep
+      # STARTTLS=true. Lets you switch when a network blocks a port.
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-true}
+      MAIL_SSL: ${MAIL_SSL:-false}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
+    extra_hosts:
+      # Linux Docker Engine doesn't auto-provide host.docker.internal; this makes it portable
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: espritconnect-web
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+  verification-service:
+    build:
+      context: ./verification-service
+      dockerfile: Dockerfile
+    container_name: espritconnect-verification
+    ports:
+      # Exposed for dev curl/Swagger; remove the host port in prod.
+      - "8000:8000"
+    environment:
+      VERIFICATION_SHARED_SECRET: ${VERIFICATION_SHARED_SECRET:-dev_secret_change_me}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Local LLM used for AI recommendations / chat assistant. Runs in-network so
+  # every developer gets it from `docker compose up` — no host install or
+  # OLLAMA_HOST tweaking required. CPU by default (fine for the small model).
+  ollama:
+    image: ollama/ollama:latest
+    container_name: espritconnect-ollama
+    # Not published to the host on purpose: the backend reaches it in-network at
+    # http://ollama:11434, and publishing 11434 would clash with a host-installed
+    # Ollama. If you want host access and have no local Ollama, add:
+    #   ports: ["11434:11434"]
+    #
+    # Model storage. Defaults to a named volume (portable; the ollama-pull job
+    # downloads the model into it). To REUSE models you already pulled on the
+    # host (no re-download), set OLLAMA_DATA to your host ollama dir in .env,
+    # e.g.  OLLAMA_DATA=/home/youruser/.ollama
+    volumes:
+      - ${OLLAMA_DATA:-ollamadata}:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  # One-shot helper: waits for the server, pulls the configured model into the
+  # shared volume, then exits. Idempotent — re-running is cheap once cached.
+  ollama-pull:
+    image: ollama/ollama:latest
+    container_name: espritconnect-ollama-pull
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["/bin/sh", "-c", "ollama pull ${OLLAMA_MODEL:-qwen2.5:0.5b}"]
+    restart: "no"
+
+  # Optional: a STABLE public URL via a Cloudflare *named* tunnel (the quick
+  # tunnel gives a new random URL every restart). One-time setup:
+  #   1. Cloudflare Zero Trust dashboard → Networks → Tunnels → Create tunnel.
+  #   2. Add a Public Hostname (e.g. app.yourdomain.com) → Service: http://frontend:80
+  #   3. Copy the tunnel TOKEN into .env as CLOUDFLARE_TUNNEL_TOKEN=...
+  # Then start it alongside the stack:
+  #   docker compose --profile tunnel up -d
+  # The URL stays the same across restarts → safe to put on a printed QR code.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: espritconnect-tunnel
+    profiles: ["tunnel"]
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      - frontend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  miniodata:
+  ollamadata:

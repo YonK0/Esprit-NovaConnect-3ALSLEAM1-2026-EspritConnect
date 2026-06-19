@@ -1,0 +1,11 @@
+Best: Tailscale Funnel (free, no card, no interstitial, stable URL)
+
+# 1. install + log in (sign in with Google/GitHub — no card)
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up
+
+# 2. expose your app's port publicly (run in background)
+sudo tailscale funnel --bg 4200
+
+# 3. see your permanent URL
+tailscale funnel status

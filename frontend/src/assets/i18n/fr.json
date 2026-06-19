@@ -1,0 +1,15 @@
+{
+  "nav": {
+    "feed": "Fil",
+    "directory": "Annuaire",
+    "mentorship": "Mentorat",
+    "jobs": "Emplois",
+    "events": "Événements",
+    "groups": "Groupes"
+  },
+  "auth": {
+    "login": "Connexion",
+    "signup": "Rejoindre le réseau",
+    "logout": "Déconnexion"
+  }
+}

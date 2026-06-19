@@ -1,0 +1,6 @@
+logging:
+  level:
+    root: INFO
+    tn.esprit.connect: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG

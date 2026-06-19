@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 400" font-family="'Plus Jakarta Sans', Inter, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#6E6E73"/>
+    </marker>
+  </defs>
+
+  <rect width="1120" height="400" fill="#ffffff"/>
+  <text x="40" y="32" font-size="20" font-weight="700" fill="#0B0B0D">EspritConnect — Architecture</text>
+  <text x="40" y="52" font-size="12" fill="#6E6E73">One docker-compose stack. The browser talks only to nginx, which proxies the API.</text>
+
+  <!-- Row 1 -->
+  <g>
+    <rect x="40" y="74" width="220" height="64" rx="10" fill="#F5F5F7" stroke="#D1D1D6"/>
+    <text x="150" y="102" text-anchor="middle" font-size="15" font-weight="700" fill="#0B0B0D">Browser</text>
+    <text x="150" y="120" text-anchor="middle" font-size="11" fill="#6E6E73">Angular 18 SPA</text>
+  </g>
+  <g>
+    <rect x="320" y="74" width="220" height="64" rx="10" fill="#F5F5F7" stroke="#D1D1D6"/>
+    <text x="430" y="102" text-anchor="middle" font-size="15" font-weight="700" fill="#0B0B0D">nginx — frontend</text>
+    <text x="430" y="120" text-anchor="middle" font-size="11" fill="#6E6E73">serves SPA · :4200</text>
+  </g>
+  <g>
+    <rect x="600" y="74" width="260" height="64" rx="10" fill="#ffffff" stroke="#E30613" stroke-width="2"/>
+    <text x="730" y="102" text-anchor="middle" font-size="15" font-weight="700" fill="#0B0B0D">Spring Boot API</text>
+    <text x="730" y="120" text-anchor="middle" font-size="11" fill="#6E6E73">Java 21 · JWT · :8081 → 8080</text>
+  </g>
+
+  <!-- Row 1 arrows -->
+  <line x1="260" y1="106" x2="318" y2="106" stroke="#6E6E73" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="289" y="98" text-anchor="middle" font-size="10" fill="#6E6E73">HTTPS</text>
+  <line x1="540" y1="106" x2="598" y2="106" stroke="#6E6E73" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="569" y="98" text-anchor="middle" font-size="10" fill="#6E6E73">/api proxy</text>
+
+  <!-- Fan from API to dependencies -->
+  <line x1="730" y1="138" x2="135" y2="286" stroke="#6E6E73" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="730" y1="138" x2="350" y2="286" stroke="#6E6E73" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="730" y1="138" x2="565" y2="286" stroke="#6E6E73" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="730" y1="138" x2="780" y2="286" stroke="#6E6E73" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="730" y1="138" x2="995" y2="286" stroke="#6E6E73" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <text x="135" y="278" text-anchor="middle" font-size="10" fill="#6E6E73">JDBC</text>
+  <text x="350" y="278" text-anchor="middle" font-size="10" fill="#6E6E73">S3</text>
+  <text x="565" y="278" text-anchor="middle" font-size="10" fill="#6E6E73">REST</text>
+  <text x="780" y="278" text-anchor="middle" font-size="10" fill="#6E6E73">HTTP</text>
+  <text x="995" y="278" text-anchor="middle" font-size="10" fill="#6E6E73">SMTP</text>
+
+  <!-- Row 2 -->
+  <g>
+    <rect x="40" y="290" width="190" height="72" rx="10" fill="#F5F5F7" stroke="#D1D1D6"/>
+    <text x="135" y="320" text-anchor="middle" font-size="14" font-weight="700" fill="#0B0B0D">PostgreSQL 16</text>
+    <text x="135" y="338" text-anchor="middle" font-size="11" fill="#6E6E73">Flyway schema + seed</text>
+  </g>
+  <g>
+    <rect x="255" y="290" width="190" height="72" rx="10" fill="#F5F5F7" stroke="#D1D1D6"/>
+    <text x="350" y="320" text-anchor="middle" font-size="14" font-weight="700" fill="#0B0B0D">MinIO (S3)</text>
+    <text x="350" y="338" text-anchor="middle" font-size="11" fill="#6E6E73">avatars · CVs · docs</text>
+  </g>
+  <g>
+    <rect x="470" y="290" width="190" height="72" rx="10" fill="#F5F5F7" stroke="#D1D1D6"/>
+    <text x="565" y="320" text-anchor="middle" font-size="14" font-weight="700" fill="#0B0B0D">Verification svc</text>
+    <text x="565" y="338" text-anchor="middle" font-size="11" fill="#6E6E73">FastAPI · OCR + face</text>
+  </g>
+  <g>
+    <rect x="685" y="290" width="190" height="72" rx="10" fill="#F5F5F7" stroke="#D1D1D6"/>
+    <text x="780" y="320" text-anchor="middle" font-size="14" font-weight="700" fill="#0B0B0D">Ollama (LLM)</text>
+    <text x="780" y="338" text-anchor="middle" font-size="11" fill="#6E6E73">qwen2.5:0.5b · local</text>
+  </g>
+  <g>
+    <rect x="900" y="290" width="190" height="72" rx="10" fill="#F5F5F7" stroke="#D1D1D6"/>
+    <text x="995" y="320" text-anchor="middle" font-size="14" font-weight="700" fill="#0B0B0D">Email</text>
+    <text x="995" y="338" text-anchor="middle" font-size="11" fill="#6E6E73">Gmail SMTP</text>
+  </g>
+
+  <!-- Verification stores into MinIO -->
+  <line x1="468" y1="326" x2="447" y2="326" stroke="#6E6E73" stroke-width="1.5" marker-end="url(#arrow)"/>
+</svg>
