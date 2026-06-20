@@ -35,7 +35,7 @@ cp .env.example .env          # optional: defaults already work for local dev
 docker compose up --build
 ```
 
-> ⏱️ **First run:** roughly **3–6 minutes** to pull base images + install
+> ⏱️ **First run:** roughly **2–4 minutes** to pull base images + install
 > dependencies, then the LLM model (~400 MB) is pulled on first start. dlib ships
 > as a prebuilt wheel, so there is **no source compilation**. Subsequent runs are
 > near‑instant (cached). To bring up only the core stack:
@@ -86,7 +86,7 @@ never be committed — `.env` is gitignored.
 - **No datasets** are stored in the repo; the verification service uses dlib's built‑in
   face‑encoding model + Tesseract OCR (installed in its Docker image).
 - **AI acceptance:** an external user can run the full AI stack locally with
-  `docker compose up --build` in under ~20 minutes (mostly the one‑time dlib build).
+  `docker compose up --build`.
 
 ## Lancer sans Docker (optionnel)
 ```bash
@@ -125,8 +125,6 @@ EspritConnect/
 - Déploiement (optionnel) : _à ajouter_
 
 ## Auteurs
-Projet Intégré **NovaConnect** — Classe **3ALSLEAM1** — 2025‑2026 — Tuteur : _à compléter_
-
 <table>
   <tr>
     <td align="center" width="160">
